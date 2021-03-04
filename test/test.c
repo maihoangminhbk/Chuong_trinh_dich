@@ -19,11 +19,16 @@ void read_file(FILE *file_input, char *string)
     }
 }
 
+typedef struct {
+    int hang;
+    int cot;
+} toa_do;
+
 // Working with word_list
 typedef struct
 {
     char word_name[100];
-    int line_index[30];
+    toa_do coordinates[30];
     int nums;
 } word;
 
@@ -33,7 +38,8 @@ void word_reset(word *word_input)
     word_input->nums = 0;
     for (int j = 0; j < 30; j++)
     {
-        word_input->line_index[j] = 0;
+        word_input->coordinates[j].cot = 0;
+        word_input->coordinates[j].hang = 0;
     }
 }
 
@@ -50,7 +56,19 @@ void word_list_arrange(word word_list[])
     {
         for (int j = i + 1; j < word_list_MAX; j++)
         {
-            if (strcmp(word_list[i].word_name, word_list[j].word_name) > 0)
+            char str1[30];
+            char str2[30];
+            strcpy(str1, word_list[i].word_name);
+            strcpy(str2, word_list[j].word_name);
+            if(word_list[i].word_name[0] >= 'A' && word_list[i].word_name[0] <= 'Z') {
+                str1[0] = str1[0] + 32;
+            }
+
+            if(word_list[j].word_name[0] >= 'A' && word_list[j].word_name[0] <= 'Z') {
+                str2[0] = str2[0] + 32;
+            }
+            
+            if (strcmp(str1, str2) > 0)
             {
                 word TG = word_list[i];
                 word_list[i] = word_list[j];
@@ -74,7 +92,7 @@ int word_list_add(word word_list[], word word_input)
     return 0;
 }
 
-int word_list_update(word word_list[], char string_input[], int line)
+int word_list_update(word word_list[], char string_input[], int line, int column)
 {
     for (int i = 0; i < word_list_MAX; i++)
     {
@@ -82,12 +100,13 @@ int word_list_update(word word_list[], char string_input[], int line)
         {
             word_list[i].nums++;
             int j = 0;
-            while (word_list[i].line_index[j] != 0)
+            while (word_list[i].coordinates[j].cot != 0)
             {
                 j++;
             }
 
-            word_list[i].line_index[j] = line;
+            word_list[i].coordinates[j].hang = line;
+            word_list[i].coordinates[j].cot = column;
             return 1;
         }
     }
@@ -97,11 +116,12 @@ int word_list_update(word word_list[], char string_input[], int line)
     strcpy(word_input.word_name, string_input);
     word_input.nums++;
     int j = 0;
-    while (word_input.line_index[j] != 0)
+    while (word_input.coordinates[j].cot != 0)
     {
         j++;
     }
-    word_input.line_index[j] = line;
+    word_input.coordinates[j].hang = line;
+    word_input.coordinates[j].cot = column;
     word_list_add(word_list, word_input);
 
     return 0;
@@ -116,10 +136,10 @@ void word_list_show(word word_list[])
             printf("%s %d ", word_list[i].word_name, word_list[i].nums);
             for (int j = 0; j < 30; j++)
             {
-                if (word_list[i].line_index[j] != 0)
+                if (word_list[i].coordinates[j].cot != 0)
                 {
 
-                    printf("%d ", word_list[i].line_index[j]);
+                    printf("(%d %d) ", word_list[i].coordinates[j].hang, word_list[i].coordinates[j].cot);
                 }
             }
             printf("\n");
@@ -136,10 +156,10 @@ void word_list_output_file(FILE *file_out, word word_list[])
             fprintf(file_out, "%s %d ", word_list[i].word_name, word_list[i].nums);
             for (int j = 0; j < 30; j++)
             {
-                if (word_list[i].line_index[j] != 0)
+                if (word_list[i].coordinates[j].cot != 0)
                 {
 
-                    fprintf(file_out,"%d ", word_list[i].line_index[j]);
+                    fprintf(file_out,"(%d %d) ", word_list[i].coordinates[j].hang, word_list[i].coordinates[j].cot);
                 }
             }
             fprintf(file_out, "\n");
@@ -211,6 +231,7 @@ void string_process(char string_input[], word word_list[], char stop_word_list[s
 {
     char string_word[100];
     int line = 1;
+    int column = 1;
     int start = 0;
     int end = 0;
     while (string_input[end] != '\0')
@@ -218,8 +239,12 @@ void string_process(char string_input[], word word_list[], char stop_word_list[s
         if (string_input[end] == '\n' || string_input[end] == '\r')
         {
             line++;
+            column = 1;
         }
-        if (check_sign(string_input[end]))
+
+
+        if ((check_sign(string_input[end]) && string_input[end] != '.' && string_input[end] != '-') || (string_input[end] == '.' && check_sign(string_input[end + 1])))
+        // if(check_sign(string_input[end]))
         {
             if (start != end)
             {
@@ -231,27 +256,32 @@ void string_process(char string_input[], word word_list[], char stop_word_list[s
                 if (check_stopw(stop_word_list, string_word))
                 {
                     check = 1;
+                    column++;
                 }
 
-                if (string_word[0] >= 'A' && string_word[0] <= 'Z')
+                if (string_word[0] >= 'A' && string_word[0] <= 'Z' && check != 1)
                 {
-                    string_word[0] = string_word[0] + 32;
-                    if (check_stopw(stop_word_list, string_word))
+                    
+                    
+                    if (!check_proper_noun(string_input, start))
+                    {
+                        string_word[0] = string_word[0] + 32;
+                        if (check_stopw(stop_word_list, string_word))
                     {
                         check = 1;
                     }
-                    if (check_proper_noun(string_input, start))
-                    {
-                        check = 1;
+                        
                     }
                 }
                 if (check == 0)
                 {
-                    word_list_update(word_list, string_word, line);
+                    word_list_update(word_list, string_word, line, column);
+                    column++;
                 }
                 memset(string_word, 0, 100);
             }
             start = end + 1;
+            
         }
         end++;
     }
@@ -259,7 +289,7 @@ void string_process(char string_input[], word word_list[], char stop_word_list[s
 
 void main()
 {
-    FILE *file_input = fopen("file_input.txt", "r");
+    FILE *file_input = fopen("vanban.txt", "r");
     if (file_input == NULL)
     {
         printf("Not found file\n");
@@ -294,4 +324,7 @@ void main()
 
     string_process(string, word_list, stop_word_list);
     word_list_output_file(file_out, word_list);
+    fclose(file_input);
+    fclose(file_out);
+    fclose(file_stopw);
 }
