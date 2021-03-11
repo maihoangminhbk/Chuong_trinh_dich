@@ -48,10 +48,10 @@ Token *readIdentKeyword(void) {
     int index = 0;
     char string[MAX_IDENT_LEN + 1];
     while (currentChar != EOF &&
-           (charCodes[currentChar] == CHAR_LETTER || charCodes[currentChar] == CHAR_DIGIT || currentChar == 63)) {
+           (charCodes[currentChar] == CHAR_LETTER || charCodes[currentChar] == CHAR_DIGIT || currentChar == 95)) {
         if (index >= MAX_IDENT_LEN) {
             while (currentChar != EOF &&
-                   (charCodes[currentChar] == CHAR_LETTER || charCodes[currentChar] == CHAR_DIGIT || currentChar == 63)) {
+                   (charCodes[currentChar] == CHAR_LETTER || charCodes[currentChar] == CHAR_DIGIT || currentChar == 95)) {
                 ++index;
                 readChar();
             }
