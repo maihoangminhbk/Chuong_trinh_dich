@@ -48,10 +48,10 @@ Token *readIdentKeyword(void) {
     int index = 0;
     char string[MAX_IDENT_LEN + 1];
     while (currentChar != EOF &&
-           (charCodes[currentChar] == CHAR_LETTER || charCodes[currentChar] == CHAR_DIGIT) || currentChar == 63) {
+           (charCodes[currentChar] == CHAR_LETTER || charCodes[currentChar] == CHAR_DIGIT || currentChar == 63)) {
         if (index >= MAX_IDENT_LEN) {
             while (currentChar != EOF &&
-                   (charCodes[currentChar] == CHAR_LETTER || charCodes[currentChar] == CHAR_DIGIT) || currentChar == 63) {
+                   (charCodes[currentChar] == CHAR_LETTER || charCodes[currentChar] == CHAR_DIGIT || currentChar == 63)) {
                 ++index;
                 readChar();
             }
@@ -151,7 +151,7 @@ Token *getToken(void) {
         case CHAR_TIMES:
             readChar();
             if (charCodes[currentChar] == CHAR_EQ)
-                token = makeToken(SB_ASSIGN_TIME, lineNo, colNo);
+                token = makeToken(SB_ASSIGN_TIMES, lineNo, colNo);
             else token = makeToken(SB_TIMES, lineNo, colNo);
             return token;
         case CHAR_SLASH:
@@ -355,6 +355,18 @@ void printToken(Token *token) {
             break;
         case SB_RSEL:
             printf("SB_RSEL\n");
+            break;
+        case SB_ASSIGN_PLUS:
+            printf("SB_ASSIGN_PLUS\n");
+            break;
+        case SB_ASSIGN_DIVIDE:
+            printf("SB_ASSIGN_DIVIDE\n");
+            break;
+        case SB_ASSIGN_SUBTRACT:
+            printf("SB_ASSIGN_SUBTRACT\n");
+            break;
+        case SB_ASSIGN_TIMES:
+            printf("SB_ASSIGN_TIMES\n");
             break;
     }
 }
