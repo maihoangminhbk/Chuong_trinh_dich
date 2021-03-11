@@ -371,23 +371,18 @@ int scan(char *fileName) {
 
 /******************************************************************/
 
-//int main(int argc, char *argv[]) {
-//    if (argc <= 1) {
-//        printf("scanner: no input file.\n");
-//        return -1;
-//    }
-//
-//    if (scan(argv[1]) == IO_ERROR) {
-//        printf("Can\'t read input file!\n");
-//        return -1;
-//    }
-//}
 int main(int argc, char *argv[]) {
-    if (scan("example3.kpl") == IO_ERROR) {
+    if (argc <= 1) {
+        printf("scanner: no input file.\n");
+        return -1;
+    }
+
+    if (scan(argv[1]) == IO_ERROR) {
         printf("Can\'t read input file!\n");
         return -1;
     }
 }
+
 
 
 
