@@ -48,10 +48,10 @@ Token *readIdentKeyword(void) {
     int index = 0;
     char string[MAX_IDENT_LEN + 1];
     while (currentChar != EOF &&
-           (charCodes[currentChar] == CHAR_LETTER || charCodes[currentChar] == CHAR_DIGIT)) {
+           (charCodes[currentChar] == CHAR_LETTER || charCodes[currentChar] == CHAR_DIGIT) || currentChar == 63) {
         if (index >= MAX_IDENT_LEN) {
             while (currentChar != EOF &&
-                   (charCodes[currentChar] == CHAR_LETTER || charCodes[currentChar] == CHAR_DIGIT)) {
+                   (charCodes[currentChar] == CHAR_LETTER || charCodes[currentChar] == CHAR_DIGIT) || currentChar == 63) {
                 ++index;
                 readChar();
             }
@@ -115,7 +115,7 @@ Token *readConstChar(void) {
 
 Token *getToken(void) {
     Token *token;
-    int ln, cn;
+
     if (currentChar == EOF)
         return makeToken(TK_EOF, lineNo, colNo);
 
@@ -128,8 +128,10 @@ Token *getToken(void) {
         case CHAR_DIGIT:
             return readNumber();
         case CHAR_PLUS:
-            token = makeToken(SB_PLUS, lineNo, colNo);
             readChar();
+            if (charCodes[currentChar] == CHAR_EQ)
+                token = makeToken(SB_ASSIGN_PLUS, lineNo, colNo);
+            else token = makeToken(SB_PLUS, lineNo, colNo);
             return token;
         case CHAR_LPAR :
             readChar();
@@ -141,16 +143,22 @@ Token *getToken(void) {
                 return makeToken(SB_LPAR, lineNo, colNo);
             return getToken();
         case CHAR_MINUS:
-            token = makeToken(SB_MINUS, lineNo, colNo);
             readChar();
+            if (charCodes[currentChar] == CHAR_EQ)
+                token = makeToken(SB_ASSIGN_SUBTRACT, lineNo, colNo);
+            else token = makeToken(SB_MINUS, lineNo, colNo);
             return token;
         case CHAR_TIMES:
-            token = makeToken(SB_TIMES, lineNo, colNo);
             readChar();
+            if (charCodes[currentChar] == CHAR_EQ)
+                token = makeToken(SB_ASSIGN_TIME, lineNo, colNo);
+            else token = makeToken(SB_TIMES, lineNo, colNo);
             return token;
         case CHAR_SLASH:
-            token = makeToken(SB_SLASH, lineNo, colNo);
             readChar();
+            if (charCodes[currentChar] == CHAR_EQ)
+                token = makeToken(SB_ASSIGN_DIVIDE, lineNo, colNo);
+            else token = makeToken(SB_SLASH, lineNo, colNo);
             return token;
         case CHAR_EQ:
             token = makeToken(SB_EQ, lineNo, colNo);
