@@ -29,30 +29,33 @@ void skipBlank() {
 }
 
 void skipComment() {
-    while (currentChar != EOF) {
-        if (charCodes[currentChar] == CHAR_TIMES) {
-            readChar();
-            if (currentChar != EOF && charCodes[currentChar] == CHAR_RPAR){
-                readChar();
-                return;
-            }
-            continue;
-        }
-        readChar();
-    }
-    error(ERR_ENDOFCOMMENT, lineNo, colNo);
+    int state = 0;
+  	while ((currentChar != EOF) && (state < 2)) {
+  		switch (charCodes[currentChar]) {
+  			case CHAR_TIMES:
+  				state = 1;
+  				break;
+  			case CHAR_RPAR:
+  				if (state == 1) state = 2;
+      			else state = 0;
+      			break;
+      		default:
+      			state = 0;
+  		}
+  		readChar();
+  	}
+  	if (state != 2)
+  	{
+  		error(ERR_ENDOFCOMMENT, lineNo, colNo);
+  	}
 }
 
 Token *readIdentKeyword(void) {
     Token *token = makeToken(TK_NONE, lineNo, colNo);
     int index = 0;
     char string[MAX_IDENT_LEN + 1];
-    
-    //Duyet den het cac gia tri la letter, number va '_'(co ma ascII la 95)
     while (currentChar != EOF &&
            (charCodes[currentChar] == CHAR_LETTER || charCodes[currentChar] == CHAR_DIGIT || currentChar == 95)) {
-        
-        // Check loi ki tu qua dai
         if (index >= MAX_IDENT_LEN) {
             while (currentChar != EOF &&
                    (charCodes[currentChar] == CHAR_LETTER || charCodes[currentChar] == CHAR_DIGIT || currentChar == 95)) {
@@ -73,50 +76,29 @@ Token *readIdentKeyword(void) {
 }
 
 Token *readNumber(void) {
-    Token *token = makeToken(TK_NONE, lineNo, colNo);;
-    int index = 0;
-    char string[MAX_IDENT_LEN + 1];
-    
-    //Duyet het ki tu la so
-    while (currentChar != EOF && charCodes[currentChar] == CHAR_DIGIT) {
-        if (index >= MAX_IDENT_LEN) {
-            while (currentChar != EOF && charCodes[currentChar] == CHAR_DIGIT) {
-                ++index;
-                readChar();
-            }
-            error(ERR_IDENTTOOLONG, lineNo, colNo);
-            break;
-        }
-        string[index++] = currentChar;
-        readChar();
-    }
+    Token *token = makeToken(TK_NUMBER, lineNo, colNo);
+  	int count = 0;
 
-    if (index > MAX_IDENT_LEN) return token;
-    string[index] = '\0';
-    
-    //Check loi vuot qua
-    char strNumber[MAX_IDENT_LEN + 15];
-    sprintf(strNumber, "%d", INT_MAX);
-    if (strcmp(string, strNumber) > 0) error(ERR_IDENTTOOLONG, lineNo, colNo);
-    token->tokenType = TK_NUMBER;
-    strcpy(token->string,string);
-    return token;
+  	while ((currentChar != EOF) && (charCodes[currentChar] == CHAR_DIGIT)) {
+    	token->string[count++] = (char)currentChar;
+    	readChar();
+  	}
+
+  	token->string[count] = '\0';
+  	token->value = atoi(token->string);
+  	return token;
 }
 
 Token *readConstChar(void) {
     Token *token;
-    
-    //Khai bao ki tu can luu tru
-    int savedChar;
+    int cr;
     readChar();
     if (currentChar != EOF && charCodes[currentChar] == CHAR_LETTER) {
-        savedChar = currentChar;
+        cr = currentChar;
         readChar();
-        
-        //Gap ki tu ket thuc
         if (currentChar != EOF && charCodes[currentChar] == CHAR_SINGLEQUOTE) {
             token = makeToken(TK_CHAR, lineNo, colNo);
-            token->string[0] = savedChar;
+            token->string[0] = cr;
             token->string[1] = '\0';
             readChar();
             return token;
@@ -139,8 +121,6 @@ Token *getToken(void) {
             return readIdentKeyword();
         case CHAR_DIGIT:
             return readNumber();
-        //Neu 2 ki tu lien tiep la +=, -=, *=, /=, := se khac voi +, -, *, /, :
-
         case CHAR_PLUS:
             readChar();
             if (charCodes[currentChar] == CHAR_EQ)
@@ -370,8 +350,6 @@ void printToken(Token *token) {
         case SB_RSEL:
             printf("SB_RSEL\n");
             break;
-        
-        //Them gia tri moi
         case SB_ASSIGN_PLUS:
             printf("SB_ASSIGN_PLUS\n");
             break;
