@@ -73,17 +73,34 @@ Token *readIdentKeyword(void) {
 }
 
 Token *readNumber(void) {
-    Token *token = makeToken(TK_NUMBER, lineNo, colNo);
-  	int count = 0;
+    Token *token = makeToken(TK_NONE, lineNo, colNo);;
+    int index = 0;
+    char string[MAX_IDENT_LEN + 1];
+    
+    //Duyet het ki tu la so
+    while (currentChar != EOF && charCodes[currentChar] == CHAR_DIGIT) {
+        if (index >= MAX_IDENT_LEN) {
+            while (currentChar != EOF && charCodes[currentChar] == CHAR_DIGIT) {
+                ++index;
+                readChar();
+            }
+            error(ERR_IDENTTOOLONG, lineNo, colNo);
+            break;
+        }
+        string[index++] = currentChar;
+        readChar();
+    }
 
-  	while ((currentChar != EOF) && (charCodes[currentChar] == CHAR_DIGIT)) {
-    	token->string[count++] = (char)currentChar;
-    	readChar();
-  	}
-
-  	token->string[count] = '\0';
-  	token->value = atoi(token->string);
-  	return token;
+    if (index > MAX_IDENT_LEN) return token;
+    string[index] = '\0';
+    
+    //Check loi vuot qua
+    char strNumber[MAX_IDENT_LEN + 15];
+    sprintf(strNumber, "%d", INT_MAX);
+    if (strcmp(string, strNumber) > 0) error(ERR_IDENTTOOLONG, lineNo, colNo);
+    token->tokenType = TK_NUMBER;
+    strcpy(token->string,string);
+    return token;
 }
 
 Token *readConstChar(void) {
